@@ -1,0 +1,14 @@
+__pycache__
+*.json
+junk
+pack
+dist
+.aws
+.cloudflare.cfg
+*.egg-info
+.vscode
+spfenv
+venv
+result.html
+__pycache__/
+.env

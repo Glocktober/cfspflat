@@ -1,0 +1,4 @@
+cloudflare>=2.8.15
+dnspython>=2.2.0
+netaddr>=0.8.0
+sender-policy-flattener>=0.3.1
