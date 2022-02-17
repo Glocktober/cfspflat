@@ -11,30 +11,38 @@ We've decided future SaaS vendors and partners will send from a subdomain, but f
 
 Hence we started researching SPF flattening as the best solution, but were concerned about the vendors making changes to the sender records.
 
-Looking for a solution to that probkem we stumbled upon the [sender-policy-flattener](https://github.com/cetanu/sender_policy_flattener) project. This tool - `spflat` - solved many problems and has some excellent features and characteristics.  
+Looking for a solution to that probkem we stumbled upon the [sender-policy-flattener](https://github.com/cetanu/sender_policy_flattener) project.  This tool - `spflat` - solved many problems and has some excellent features and characteristics.  
 * The project is opensource
 * It will query your list of approved sendors and flatten these into a list of appropriately formatted and sized spf records composed of `ip4` and `ip6` spf entries.
 * Provide these entries as a chain of spf `include` entries. 
-* It will send you email if any of your the senders dns entries have changed, and indicate what the the updated SPF records needs to be. 
+* Should any of your the senders dns entries change, it sends email indicating the changes and the the corrections required to your spf records. 
 * `spflat` works reliably and accurately
-* It can run entirely from a configuration file.
-* It's written in Python, easy to install and configure, and can be modified.
+* Can run entirely from a JSON configuration file.
+* Written in Python, and easy to install and configure.
 
-`sendier-policy-flattner` did 90% of what we wanted for managing our SPF records and keeping them accurate.
+`sendier-policy-flattner` did ***90%*** of what we desired for flattening and managing our SPF records.
 
 ## Requirements that led to this project
-After using `splat` for a bit we come up with a wish list - the other 10% of what we wanted.
+After using `splat` for a bit we come up with a wish list - the other ***10%*** of what we needed.
 
-Here is the wishlist we came up with:
-* Have the ability to run `spflat` in the command line, without the email being sent. (a `--no-email` switch)
-* Our public DNS zones are in Cloudflare. So have `spflat` **AUTOMATICALLY** update these resource records in Cloudflare if a change is detected. (a `--update` switch). 
-* Have `spflat` create the SPF zone records in Cloudflare DNS for initial configuration (a `--force-update` switch)
-* Have the status (sums) file updated ONLY if the zones were updated or force updated.
-  * previously spflat would replace the sums file each time it ran, so if you missed a change you wouldn't be notified a second time. )
-* Not reinvent the wheel (i.e. a rewrite of `sender-policy-flattener` to add these features) - just put on some new hub caps.
-* Make all of these changes available:
-  * opensource
-  * As an extension - not a replacement - to the existing `sender-policy-flattener` project
+Here is the wishlist of requirements we came up with:
+* The ability to run `spflat` in the command line, without the email being sent. (a `--no-email` switch)
+* Our public DNS zones are in Cloudflare. We wanted `spflat` to **AUTOMATICALLY** update the necessary resource records in Cloudflare when a  change is detected. (a `--update` switch). 
+* Ability to have `spflat` re-create the SPF zone records in Cloudflare DNS for zone repair (and initial configuration.) (a `--force-update` switch)
+* Have the output status file (sums file) update ONLY if the zones are updated.
+  
+  * original `spflat` replaces the sums file each time it ran, so in monitoring mode a change was reported only once.
+
+* `sender-policy-flattener` is a fine tool, so we did not want to reinvent the wheel:
+  
+  * Utilized `spflat` by supplementing its functionality.
+  
+  * A supplement, not a replacement.
+
+* Keep the changes opensource:
+  * Recognize the debt to `sender-policy-flattener`
+  * Make the changes avialable under the same licenses.
+
   * To limit confusion, change the command from `spflat` to `cfspflat`
 
 Hence `cfspflat` - ***CloudFlare Sender Policy Flattener*** was created.
