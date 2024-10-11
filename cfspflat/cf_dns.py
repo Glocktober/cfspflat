@@ -1,7 +1,7 @@
 import os
-import CloudFlare
-
-DEBUGCF=os.environ.get('DEBUGCF',False)
+from pathlib import Path
+from cloudflare import Cloudflare
+import tomllib
 
 
 class CFzone:
@@ -9,15 +9,29 @@ class CFzone:
 
     def __init__(self, cf_domain, ):
 
+        api_email = os.environ.get('CLOUDFLARE_EMAIL')
+        api_key = os.environ.get('CLOUDFLARE_API_KEY')
+        api_token = os.environ.get('CLOUDFLARE_API_TOKEN')
+        cf_file = Path('.cloudflare.cf')
+        if (not cf_file.exists()):
+            cf_file = Path.home().joinpath(cf_file)
+        if (cf_file.exists()):
+            with open(cf_file, 'rb') as f:
+                auth_data = tomllib.load(f)
+                if ('CloudFlare' in auth_data):
+                    api_email = auth_data['CloudFlare'].get('email', None)
+                    api_key = auth_data['CloudFlare'].get('api_key', None)
+                    api_token = auth_data['CloudFlare'].get('api_token', None)
+
         self._domain = cf_domain
-        self._cf = CloudFlare.CloudFlare(debug=DEBUGCF)
+        self._cf = Cloudflare(api_email=api_email, api_key=api_key, api_token=api_token)
 
         zone_info = self.get_zoneid(cf_domain)
         if not zone_info:
             emes = f'Can\'t Find a CloudFlare zone for {cf_domain}'
             raise Exception(emes)
-        self.zoneid = zone_info['id']
-        self.zonename = zone_info['name']
+        self.zoneid = zone_info.id
+        self.zonename = zone_info.name
 
 
     def get_zoneid(self,fqdn):
@@ -25,9 +39,9 @@ class CFzone:
 
         fparts = fqdn.split('.')
         while(fparts):
-            r = self._cf.zones.get(params={'match':'all', 'name': '.'.join(fparts)})
-            if len(r) == 1:
-                return r[0]
+            r = self._cf.zones.list(match='all', name='.'.join(fparts))
+            if r and len(r.result) == 1:
+                return r.result[0]
             fparts = fparts[1:]
         return None        
 
@@ -35,14 +49,14 @@ class CFzone:
     def create(self,params):
         """ Add a record, return the record id """
 
-        r = self._cf.zones.dns_records.post(self.zoneid, data=params)        
-        return r['id']
+        r = self._cf.dns.records.create(zone_id=self.zoneid, **params)
+        return r.id
 
 
     def get(self,params={}):
         """ Get a resouce record """
 
-        r = self._cf.zones.dns_records.get(self.zoneid,params=params)
+        r = self._cf.dns.records.list(zone_id=self.zoneid, **params)
         return r
 
 
@@ -50,10 +64,10 @@ class CFzone:
         """ Return a specific resource record values: id, proxied, ttl """
 
         r = self.get(params)
-        recs = len(r)
+        recs = 0 if (not r) else len(r.result)
         if recs == 1:
-            rr = r[0]
-            return rr['id'], rr['proxied'], rr['ttl']
+            rr = r.result[0]
+            return rr.id, rr.proxied, rr.ttl
         elif recs == 0:
             return 0, False, 0
         else:
@@ -63,16 +77,16 @@ class CFzone:
     def set(self,rid,params={}):
         """ Set (update) a specific record id """
 
-        r = self._cf.zones.dns_records.put(self.zoneid, rid, data=params)
+        r = self._cf.dns.records.update(dns_record_id=rid, zone_id=self.zoneid, **params)
 
-        return r['id']        
+        return r.id
 
 
     def delete(self,rid):
         """ Delete a DNS record """
 
-        r = self._cf.zones.dns_records.delete(self.zoneid, rid)
-        return r['id']
+        r = self._cf.zones.dns_records.delete(dns_record_id=rid, zone_id=self.zoneid)
+        return r.id
 
 
 
