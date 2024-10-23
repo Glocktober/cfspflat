@@ -158,11 +158,13 @@ There are a couple of locations and formats for the API credentials Cloudfare re
 * For simplicity you can use the `.cloudflare.cfg` file in either your home directory or in the directory you will run cfspflat.
 ```
 [CloudFlare]
-email = dnsadmin@example.org
-token = 1234567890abc...abc
+email = "dnsadmin@example.org"
+api_key = "1234567890abc...abc"
+# or alternatively you can use a API token
+api_token = "your-generated..API-token"
 ```
 * It should go without saying - protect the API keys and this file.
-* It's also possible to pass the credentials as environment variables.
+* It's also possible to pass the credentials as environment variables (`CLOUDFLARE_EMAIL`, `CLOUDFLARE_API_KEY`, `CLOUDFLARE_API_TOKEN`).
 
 ### 4. Run `cfspflat` to build the sums file and SPF entries
 * Run cfspflat twice:
